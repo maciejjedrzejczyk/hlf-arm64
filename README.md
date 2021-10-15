@@ -1,35 +1,36 @@
 # Deployment of Hyperledger Fabric on ARM64 architecture
 
-## 1. Document Overview
+## 1. DOCUMENT OVERVIEW
 
 This guide will take you through the process of deploying Hyperledger Fabric on devices using ARM64 architecture. The following areas will be covered in the tutorial below:
 
-- installation of prerequisites on your development device
-- preparation of development environment and downloading the necessary git repositories
-- preparation of Docker images
-- compilation of Hyperledger Fabric binaries
-- deployment of a sample Hyperledger Fabric network using `fabric-samples` repository from Hyperledger.
+- *Section 1. Document Overview*
+- *Section 2. Installation of prerequisites on your development device*
+- *Section 3. Preparation of development environment and downloading the necessary git repositories*
+- *Section 4. Preparation of Docker images*
+- *Section 5. Compilation of Hyperledger Fabric binaries*
+- *Section 6. Deployment of a sample Hyperledger Fabric network using `fabric-samples` repository from Hyperledger.*
 
 ### 1.1 Verified deployments
 
 This guide has been tested successfully on Raspberry Pi 4 (DietPi) and AWS Graviton 2 EC2 instance (Amazon Linux 2) with following Hyperledger Fabric components:
 
-- Hyperledger Fabric 2.3.3 (vanilla)
-- Fabric-CA 1.5.2 (vanilla)
-- Fabric-nodeenv 2.3.3 (vanilla)
+- *Hyperledger Fabric 2.3.3 (vanilla)*
+- *Fabric-CA 1.5.2 (vanilla)*
+- *Fabric-nodeenv 2.3.3 (vanilla)*
 
 ### 1.2 References
 
-- Hyperledger-Fabric-ARM64-images by Chinyati : https://github.com/chinyati/Hyperledger-Fabric-ARM64-images
-- Hyperledger Fabric Documentation: https://hyperledger-fabric.readthedocs.io/
+- *Hyperledger-Fabric-ARM64-images by Chinyati* : https://github.com/chinyati/Hyperledger-Fabric-ARM64-images
+- *Hyperledger Fabric Documentation*: https://hyperledger-fabric.readthedocs.io/
 
 ### 1.3 To Do
 
-- Testing the deployment on Apple M1 CPU
-- Creation of Hyperledger Caliper ARM-compatible images and testing with Hyperledger Fabric
-- Creation of Hyperledger Explorer ARM-compatible images and testing with Hyperledger Fabric
+- *Testing the deployment on Apple M1 CPU*
+- *Creation of Hyperledger Caliper ARM-compatible images and testing with Hyperledger Fabric*
+- *Creation of Hyperledger Explorer ARM-compatible images and testing with Hyperledger Fabric*
 
-## 2 Prerequisites
+## 2 PREREQUISITES
 
 In order to proceed with the deployment of Hyperledger Fabric on ARM64 device and test it against `fabric-samples` scripts, it is necessary to install the following components:
 
@@ -136,7 +137,7 @@ export PATH=$PATH:/usr/local/go/bin
 
 Usually there is no need to install Python 3.x because it comes preinstalled with Operating Systems which were tested in this guide.
 
-## 3 Downloading and preparing git repositories
+## 3 PREPARING THE DEVELOPMENT ENVIRONMENT
 
 ### 3.1 Preparing the development environment and environmental variables
 
@@ -176,3 +177,163 @@ git clone https://github.com/hyperledger/fabric.git
 git clone https://github.com/hyperledger/fabric-ca.git
 git clone https://github.com/hyperledger/fabric-chaincode-node
 ```
+
+## **EDIT BASEIMAGE FILES**
+The Fabric baseimage repository contains source code for the base docker images required by the fabric repository. Navigate to the **fabric-baseimage**:
+
+```
+cd $HOME/go/src/github.com/hyperledger/fabric-baseimage
+```
+
+Check the available tagged branches for the fabric-baseimage codebase by executing:
+
+```
+git tag
+```
+For this exercise switch to branch v0.4.20 by executing:
+```
+git checkout v0.4.20
+```
+
+Within the fabric-baseimage codebase there are files that should be adjusted for successful build.
+
+1. Edit the file **config/baseimage/Dockerfile** by commenting out
+```
+FROM adoptopenjdk:8u222-b10-jdk-openj9-0.15.1
+```
+and inserting this line:
+```
+FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u222-b10
+```
+
+2. Edit the file **config/baseos/Dockerfile** by commenting out
+```
+FROM debian:buster-20190910-slim
+```
+
+and inserting this line:
+```
+FROM arm64v8/debian:buster
+```
+3. Edit the file **images/couchdb/Dockerfile** by commenting out
+```
+FROM debian:stretch-20190910-slim
+```
+and inserting this line;
+```
+FROM arm64v8/debian:buster
+```
+Whilst in the same file replace the following line:
+```
+libicu57 \
+```
+with the following line
+```
+libicu63 \
+```
+Finally in the same file **DELETE** this line as it causes errors within Debain:buster due to the package not being available
+```
+libmozsf180 \
+```
+4. Edit the two docker files in **images/zookeeper/Dockerfile** and **images/kafka/Dockerfile** by commenting out
+```
+FROM debian:buster-20190910-slim as download
+```
+and insert this line:
+```
+FROM arm64v8/debian:buster as download
+```
+still in the same file comment this line
+```
+FROM adoptopenjdk:8u222-b10-jdk-openj9-0.15.1
+```
+and insert this line:
+```
+FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u222-b10
+```
+5. Lastly edit the file **scripts/common/setup.sh** and replace two instances of the following line:
+```
+ARCH=`uname -m | sed 's|i686|386|' | sed 's|x86_64|amd64|'`
+```
+with this line:
+```
+ARCH=`uname -m | sed 's|i686|386|' | sed 's|x86_64|amd64|' | sed 's|aarch64|arm64|'`
+```
+Still in the same file, replace all instances of **golang-1.6** with **golang-1.11**
+
+## BUILDING BASEIMAGE DOCKER IMAGES ##
+
+After setting up the Prerequisites and also editing the files in the Base-image codebase its time to make the images. First check if there are any available docker images and if any remove them.
+
+1. The following instructions should be done whilst in **fabric-baseimage directory**
+
+* To build docker images for the baseimage and baseos execute:
+```
+make docker
+```
+After an hour+ build should complete and then run **docker images** to list the successfully built images. If successful proceed.
+
+* To build docker image for couchdb execute:
+```
+make couchdb
+```
+* To build docker image for kafka execute:
+```
+make kafka
+```
+* To build docker image for zookeeper execute:
+```
+make zookeeper
+```
+
+At this point run **docker images** to see created images. If successful a list of created docker images will show.
+
+2. Navigate to **fabric directory** and here execute this command to switch to branch v2.1.0
+```
+git checkout v2.1.0
+```
+
+Within this directory Now execute this command:
+```
+make docker
+```
+
+If successful this process will create the **peer, orderer, tools, ccenv**. These individual components can also be built separately e.g ```make peer peer-docker``` or ```make ccenv```.
+Run docker images to list all created image.
+
+3. Dependent on what the Raspberry Pi will be in your deployment create the fabric-ca by navigating to **fabric-ca** directory. In this directory switch to branch v1.4.7
+```
+git checkout v1.4.7
+```
+
+Open the Makefile in fabric-ca and replace every instance of amd64 to arm64 for Linux entries.
+
+Within this directory Now execute this command:
+```
+make docker
+```
+
+## BUILDING BASEIMAGE DOCKER IMAGES ##
+
+Binary executables which include peer, orderer, cryptogen and more need to be built for the ARM64 architecture as well. These can be built from the source code in /fabric folder.
+```
+$ make native
+```
+
+These built executables will be places in the bin folder within /bin and must be moved to the /bin folder for the Hyperledger fabric samples or project.
+
+### **ALL REQUIRED DOCKER IMAGES WOULD HAVE BEEN BUILT BY NOW.**
+These built images can be accessed from https://hub.docker.com/u/chinyati.
+Run docker images to view them.
+
+ERRORS
+For errors that could come up when deploying test-network or your channels look for core.yaml file in config and edit Memory value to:
+```
+Memory: 16777216
+```
+
+Install gcc to avoid runtime errors
+```
+sudo apt install -y gcc
+```
+
