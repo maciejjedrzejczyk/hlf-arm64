@@ -178,35 +178,45 @@ git clone https://github.com/hyperledger/fabric-ca.git
 git clone https://github.com/hyperledger/fabric-chaincode-node
 ```
 
-## **EDIT BASEIMAGE FILES**
+## 4. PREPARATION OF DOCKER IMAGES
+
 The Fabric baseimage repository contains source code for the base docker images required by the fabric repository. Navigate to the **fabric-baseimage**:
 
 ```
 cd $HOME/go/src/github.com/hyperledger/fabric-baseimage
 ```
 
+### 4.1 baseimage, baseos, kafka, zookeeper and couchdb
+
+#### 4.1.1 Setting a target branch
+
 Check the available tagged branches for the fabric-baseimage codebase by executing:
 
 ```
 git tag
 ```
-For this exercise switch to branch v0.4.20 by executing:
+For this exercise switch to branch v0.4.22 by executing:
 ```
-git checkout v0.4.20
+git checkout v0.4.22
 ```
 
 Within the fabric-baseimage codebase there are files that should be adjusted for successful build.
 
-1. Edit the file **config/baseimage/Dockerfile** by commenting out
+#### 4.1.2 Fabric baseimage
+
+Edit the file **config/baseimage/Dockerfile** by commenting out
+
 ```
 FROM adoptopenjdk:8u222-b10-jdk-openj9-0.15.1
 ```
 and inserting this line:
 ```
-FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u222-b10
+FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u302-b08
 ```
 
-2. Edit the file **config/baseos/Dockerfile** by commenting out
+#### 4.1.3 Fabric baseos
+
+Edit the file **config/baseos/Dockerfile** by commenting out
 ```
 FROM debian:buster-20190910-slim
 ```
@@ -215,7 +225,13 @@ and inserting this line:
 ```
 FROM arm64v8/debian:buster
 ```
-3. Edit the file **images/couchdb/Dockerfile** by commenting out
+
+#### 4.1.4 Couchdb (Hyperledger Fabric-branded Docker image)
+
+Please note that this image is no longer used by Hyperledger Fabric 2.x and instead, a Apache-maintained Couchdb Docker image is used instead. The documentation on how to prepare a Dockerfile for ARM64 of Fabric-maintained Couchdb Docker image is here for posterity only.
+
+Edit the file **images/couchdb/Dockerfile** by commenting out
+
 ```
 FROM debian:stretch-20190910-slim
 ```
@@ -231,11 +247,17 @@ with the following line
 ```
 libicu63 \
 ```
-Finally in the same file **DELETE** this line as it causes errors within Debain:buster due to the package not being available
+Finally in the same file comment out the following lines:
 ```
-libmozsf180 \
+libmozjs185 \
+libnspr4-dev \
 ```
-4. Edit the two docker files in **images/zookeeper/Dockerfile** and **images/kafka/Dockerfile** by commenting out
+
+#### 4.1.5 Kafka and Zookeeper
+
+Please note that Kafka and Zookeeper Ordering Service Network is set to deprecated status in Hyperledger Fabric 2.x and instead, Raft OSN is used instead. The documentation on how to prepare a Dockerfile for ARM64 of Kafka/Zookeeper Docker images is here for posterity only.
+
+Edit the two docker files in **images/zookeeper/Dockerfile** and **images/kafka/Dockerfile** by commenting out
 ```
 FROM debian:buster-20190910-slim as download
 ```
@@ -249,9 +271,12 @@ FROM adoptopenjdk:8u222-b10-jdk-openj9-0.15.1
 ```
 and insert this line:
 ```
-FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u222-b10
+FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u302-b08
 ```
-5. Lastly edit the file **scripts/common/setup.sh** and replace two instances of the following line:
+
+#### 4.1.6 Makefile scripts
+
+Lastly edit the file **scripts/common/setup.sh** and replace two instances of the following line:
 ```
 ARCH=`uname -m | sed 's|i686|386|' | sed 's|x86_64|amd64|'`
 ```
@@ -259,9 +284,26 @@ with this line:
 ```
 ARCH=`uname -m | sed 's|i686|386|' | sed 's|x86_64|amd64|' | sed 's|aarch64|arm64|'`
 ```
-Still in the same file, replace all instances of **golang-1.6** with **golang-1.11**
+Still in the same file, comment out the following part of the script:
 
-## BUILDING BASEIMAGE DOCKER IMAGES ##
+```
+#else
+   # Install Golang 1.6 binary as a bootstrap to compile the Golang GO_VER source
+#   apt-get -y install golang-1.6
+#apt-get -y install golang-1.11
+#   cd /tmp
+#   wget --quiet --no-check-certificate https://storage.googleapis.com/golang/go${GO_VER}.src.tar.gz
+#   tar -xzf go${GO_VER}.src.tar.gz -C /opt
+
+#   cd $GOROOT/src
+#   export GOROOT_BOOTSTRAP="/usr/lib/go-1.6"
+#    export GOROOT_BOOTSTRAP="/usr/lib/go-1.11"
+#   ./make.bash
+#   apt-get -y remove golang-1.6
+#apt-get -y remove golang-1.11
+```
+
+#### 4.1.7 Building Baseimage Docker images
 
 After setting up the Prerequisites and also editing the files in the Base-image codebase its time to make the images. First check if there are any available docker images and if any remove them.
 
@@ -287,6 +329,28 @@ make zookeeper
 ```
 
 At this point run **docker images** to see created images. If successful a list of created docker images will show.
+
+```
+hyperledger/fabric-ccenv       2.3                              77e17bf437cc   27 hours ago    496MB
+hyperledger/fabric-ccenv       2.3.3                            77e17bf437cc   27 hours ago    496MB
+hyperledger/fabric-ccenv       arm64-2.3.3-snapshot-99553020d   77e17bf437cc   27 hours ago    496MB
+hyperledger/fabric-ccenv       latest                           77e17bf437cc   27 hours ago    496MB
+hyperledger/fabric-baseos      2.3                              68a177f35497   27 hours ago    6.65MB
+hyperledger/fabric-baseos      2.3.3                            68a177f35497   27 hours ago    6.65MB
+hyperledger/fabric-baseos      arm64-2.3.3-snapshot-99553020d   68a177f35497   27 hours ago    6.65MB
+hyperledger/fabric-baseos      latest                           68a177f35497   27 hours ago    6.65MB
+hyperledger/fabric-zookeeper   arm64-0.4.22                     e7844f555748   27 hours ago    374MB
+hyperledger/fabric-zookeeper   latest                           e7844f555748   27 hours ago    374MB
+hyperledger/fabric-kafka       arm64-0.4.22                     3950ddc2f3ba   27 hours ago    368MB
+hyperledger/fabric-kafka       latest                           3950ddc2f3ba   27 hours ago    368MB
+hyperledger/fabric-couchdb     arm64-0.4.22                     be18d2ecbcf8   27 hours ago    469MB
+hyperledger/fabric-couchdb     latest                           be18d2ecbcf8   27 hours ago    469MB
+hyperledger/fabric-baseimage   arm64-0.4.22                     b503d2f95c90   27 hours ago    1.11GB
+hyperledger/fabric-baseimage   latest                           b503d2f95c90   27 hours ago    1.11GB
+hyperledger/fabric-baseos      arm64-0.4.22                     f0490e5a0b85   28 hours ago    120MB
+```
+
+
 
 2. Navigate to **fabric directory** and here execute this command to switch to branch v2.1.0
 ```
