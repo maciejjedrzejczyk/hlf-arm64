@@ -180,13 +180,13 @@ git clone https://github.com/hyperledger/fabric-chaincode-node
 
 ## 4. PREPARATION OF DOCKER IMAGES
 
+### 4.1 baseimage, baseos, kafka, zookeeper and couchdb
+
 The Fabric baseimage repository contains source code for the base docker images required by the fabric repository. Navigate to the **fabric-baseimage**:
 
 ```
 cd $HOME/go/src/github.com/hyperledger/fabric-baseimage
 ```
-
-### 4.1 baseimage, baseos, kafka, zookeeper and couchdb
 
 #### 4.1.1 Setting a target branch
 
@@ -350,12 +350,125 @@ hyperledger/fabric-baseimage   latest                           b503d2f95c90   2
 hyperledger/fabric-baseos      arm64-0.4.22                     f0490e5a0b85   28 hours ago    120MB
 ```
 
+### 4.2 peer, orderer, tools, ccenv, fabric binaries
+
+The Fabric fabric repository contains source code for the docker images required for peer, orderer, ccenv tools and fabric binaries. Navigate to the **fabric**:
+
+```
+cd $HOME/go/src/github.com/hyperledger/fabric
+```
+
+#### 4.2.1  Setting a target branch
+
+Navigate to **fabric directory** and here execute this command to switch to branch v2.3.0
+```
+git checkout v2.3.3
+```
+
+#### 4.2.2 peer
+
+Move the original Dockerfile to make a room for a new file:
+
+mv Dockerfile Dockerfile.orig
+
+Now, create a new Dockerfile and include the following text:
+
+```
+ARG GO_VER
+ARG ALPINE_VER
+
+FROM golang:${GO_VER}-buster as golang
+
+RUN apt-get update \
+    && apt-get install -y curl \
+    git \
+    gcc \
+    make \
+    musl-dev \
+    bash \
+    binutils ;
+
+ADD . $GOPATH/src/github.com/hyperledger/fabric
+WORKDIR $GOPATH/src/github.com/hyperledger/fabric
+
+FROM golang as peer
+ARG GO_TAGS
+RUN make peer GO_TAGS=${GO_TAGS}
+
+FROM golang:${GO_VER}-buster
+ENV FABRIC_CFG_PATH /etc/hyperledger/fabric
+VOLUME /etc/hyperledger/fabric
+VOLUME /var/hyperledger
+COPY --from=peer /go/src/github.com/hyperledger/fabric/build/bin /usr/local/bin
+COPY --from=peer /go/src/github.com/hyperledger/fabric/sampleconfig/msp ${FABRIC_CFG_PATH}/msp
+COPY --from=peer /go/src/github.com/hyperledger/fabric/sampleconfig/core.yaml ${FABRIC_CFG_PATH}
+EXPOSE 7051
+CMD ["peer","node","start"]
+
+```
+
+Save the file and exit the folder.
 
 
-2. Navigate to **fabric directory** and here execute this command to switch to branch v2.1.0
+#### 4.2.3 orderer
+
+There is no need for modification of an original Dockerfile. You can now go to another step.
+
+#### 4.2.4 ccenv
+
+There is no need for modification of an original Dockerfile. You can now go to another step.
+
+#### 4.2.5 tools
+
+Move the original Dockerfile to make a room for a new file:
+
+mv Dockerfile Dockerfile.orig
+
+Now, create a new Dockerfile and include the following text:
+
 ```
-git checkout v2.1.0
+ARG GO_VER
+#ARG ALPINE_VER
+#FROM golang:${GO_VER}-alpine${ALPINE_VER} as golang
+FROM golang:${GO_VER}-buster as golang
+
+RUN apt-get update \
+    && apt-get install -y curl \
+    git \
+    gcc \
+    make \
+    musl-dev \
+    bash \
+    tar \
+    binutils \
+    gnupg;
+
+ADD . $GOPATH/src/github.com/hyperledger/fabric
+WORKDIR $GOPATH/src/github.com/hyperledger/fabric
+
+FROM golang as tools
+ARG GO_TAGS
+RUN make peer configtxgen configtxlator cryptogen discover osnadmin idemixgen GO_TAGS=${GO_TAGS}
+
+FROM golang:${GO_VER}-buster
+
+RUN apt-get update \
+    && apt-get install -y jq \
+    tzdata \
+    git \
+    bash;
+
+ENV FABRIC_CFG_PATH /etc/hyperledger/fabric
+VOLUME /etc/hyperledger/fabric
+COPY --from=tools /go/src/github.com/hyperledger/fabric/build/bin /usr/local/bin
+COPY --from=tools /go/src/github.com/hyperledger/fabric/sampleconfig ${FABRIC_CFG_PATH}
+
 ```
+
+Save the file and exit the folder.
+
+
+Within the fabric-baseimage codebase there are files that should be adjusted for successful build.
 
 Within this directory Now execute this command:
 ```
