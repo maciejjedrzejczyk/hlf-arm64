@@ -1,6 +1,6 @@
 # Deployment of Hyperledger Fabric on ARM64 architecture
 
-## Introduction
+## 1. Document Overview
 
 This guide will take you through the process of deploying Hyperledger Fabric on devices using ARM64 architecture. The following areas will be covered in the tutorial below:
 
@@ -10,7 +10,7 @@ This guide will take you through the process of deploying Hyperledger Fabric on 
 - compilation of Hyperledger Fabric binaries
 - deployment of a sample Hyperledger Fabric network using `fabric-samples` repository from Hyperledger.
 
-## Verified deployments
+### 1.1 Verified deployments
 
 This guide has been tested successfully on Raspberry Pi 4 (DietPi) and AWS Graviton 2 EC2 instance (Amazon Linux 2) with following Hyperledger Fabric components:
 
@@ -18,24 +18,24 @@ This guide has been tested successfully on Raspberry Pi 4 (DietPi) and AWS Gravi
 - Fabric-CA 1.5.2 (vanilla)
 - Fabric-nodeenv 2.3.3 (vanilla)
 
-## References
+### 1.2 References
 
 - Hyperledger-Fabric-ARM64-images by Chinyati : https://github.com/chinyati/Hyperledger-Fabric-ARM64-images
 - Hyperledger Fabric Documentation: https://hyperledger-fabric.readthedocs.io/
 
-## To Do
+### 1.3 To Do
 
 - Testing the deployment on Apple M1 CPU
 - Creation of Hyperledger Caliper ARM-compatible images and testing with Hyperledger Fabric
 - Creation of Hyperledger Explorer ARM-compatible images and testing with Hyperledger Fabric
 
-## Prerequisites
+## 2 Prerequisites
 
 In order to proceed with the deployment of Hyperledger Fabric on ARM64 device and test it against `fabric-samples` scripts, it is necessary to install the following components:
 
-### Docker engine
+### 2.1 Docker engine
 
-- Debian-based OS
+#### Debian-based OS
 
 The installation of this component is fairly similar to its counterpart on x86 architecture:
 
@@ -58,7 +58,7 @@ sudo usermod -aG docker $USER
 logout
 ```
 
-- Amazon Linux 2 (Graviton 2)
+#### Amazon Linux 2 (Graviton 2)
 
 Docker engine can be installed with the following command:
 
@@ -66,13 +66,13 @@ Docker engine can be installed with the following command:
 sudo amazon-linux-extras install docker
 ```
 
-### docker-compose
+### 2.2 docker-compose
 
 There is currently no official docker-compose binary dedicated to ARM64 and compilation from sources will fail due to the absence of necessary Python libraries available in ARM64 architecture. A workaround to solve this problem is as follows:
 
-a) Install software packages
+*a) Install software packages*
 
-- Debian-based OS
+#### Debian-based OS
 
 ```
 sudo apt install python3-dev
@@ -82,14 +82,14 @@ sudo apt-get install build-essential -y
 sudo apt-get install python3-dev -y
 ```
 
-- Centos/RHEL-based OS
+#### Centos/RHEL-based OS
 
 ```
 sudo yum groupinstall "Development Tools"
 sudo yum install python3-devel
 ```
 
-b) Compile libsodium library
+*b) Compile libsodium library*
 
 ```
 wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.18-stable.tar.gz
@@ -107,7 +107,7 @@ make -j check
 sudo make install
 ```
 
-c) Install pynacl and docker-compose
+*c) Install pynacl and docker-compose*
 
 ```
 SODIUM_INSTALL=system pip3 install pynacl
@@ -118,7 +118,7 @@ docker-compose -v
 ```
 
 
-### Golang
+#### Golang
 
 The installation of this component is fairly similar to its counterpart on x86 architecture. The newest release of Golang can be used.
 
@@ -132,11 +132,13 @@ go --version
 export PATH=$PATH:/usr/local/go/bin
 ```
 
-### Python 3.x
+#### Python 3.x
 
 Usually there is no need to install Python 3.x because it comes preinstalled with Operating Systems which were tested in this guide.
 
-## Downloading and preparing git repositories
+## 3 Downloading and preparing git repositories
+
+### 3.1 Preparing the development environment and environmental variables
 
 The Hyperledger Fabric Docker images need to be built within a Go workspace which should be created after installing dependencies. To manually create workspace, do the following:
 
@@ -146,25 +148,27 @@ mkdir -p $HOME/golang
 export GOPATH=$HOME/go
 ```
 
-Check whether path has been added by executing $ echo $PATH. If the GOPATH has not been added open the `$ ~/.profile` or `$ ~/.bashrc` and add the `GOPATH`, then execute $ `source ~/.bashrc` to save the paths.
+Check whether path has been added by executing `echo $PATH`. If the `GOPATH` has not been added open the `~/.profile` or `~/.bashrc` and add the `GOPATH`, then execute `source ~/.bashrc` to save the paths.
 
-Verify Golang environment setup by checking `$ go env` and see if `GOPATH` and `GOROOT` have been setup.
+Verify Golang environment setup by checking `go env` and see if `GOPATH` and `GOROOT` have been setup.
+
+### 3.2 Clone repositories
 
 To successfully complete the deployment of Hyperledger Fabric, it will be necessary to download the following git repositories:
 
-- Create a single directory for all deployments:
+*Create a single directory for all deployments:*
 
 ```
 mkdir -p $HOME/go/src/github.com/hyperledger
 ```
 
-- Go to the folder:
+*Go to the folder:*
 
 ```
 cd $HOME/go/src/github.com/hyperledger
 ```
 
-- Clone the following repositories
+*Clone the following repositories*
 
 ```
 git clone https://github.com/hyperledger/fabric-baseimage.git
