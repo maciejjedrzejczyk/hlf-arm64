@@ -14,7 +14,13 @@ This guide assumes that you are already familiar with Hyperledger Fabric and you
 
 ### 1.1 Verified deployments
 
-This guide has been tested successfully on Raspberry Pi 4 (DietPi) and AWS Graviton 2 EC2 instance (Amazon Linux 2) with following Hyperledger Fabric components:
+This guide has been tested successfully on following hardware:
+
+- Raspberry Pi 4 with DietPi 7.6.3
+- AWS Graviton 2 EC2 instance with Amazon Linux 2
+- Macbook Air M1 with MacOS Big Sur 11.6
+
+This guide has been tested successfully with following Hyperledger Fabric components:
 
 - *Hyperledger Fabric 2.3.3 (vanilla)*
 - *Fabric-CA 1.5.2 (vanilla)*
@@ -27,7 +33,6 @@ This guide has been tested successfully on Raspberry Pi 4 (DietPi) and AWS Gravi
 
 ### 1.3 To Do
 
-- *Testing the deployment on Apple M1 CPU*
 - *Creation of Hyperledger Caliper ARM-compatible images and testing with Hyperledger Fabric*
 - *Creation of Hyperledger Explorer ARM-compatible images and testing with Hyperledger Fabric*
 
