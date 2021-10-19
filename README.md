@@ -67,6 +67,12 @@ Docker engine can be installed with the following command:
 sudo amazon-linux-extras install docker
 ```
 
+#### MacOS
+
+Docker for Mac using M1 processor can be downloaded from an official Docker website: https://docs.docker.com/desktop/mac/install/
+
+This installer will also include `docker-compose`.
+
 ### 2.2 docker-compose
 
 There is currently no official docker-compose binary dedicated to ARM64 and compilation from sources will fail due to the absence of necessary Python libraries available in ARM64 architecture. A workaround to solve this problem is as follows:
@@ -123,6 +129,8 @@ docker-compose -v
 
 The installation of this component is fairly similar to its counterpart on x86 architecture. The newest release of Golang can be used.
 
+#### Debian and Centos/RHEL-based based OS
+
 ```
 wget https://golang.org/dl/go1.17.2.linux-arm64.tar.gz
 
@@ -131,6 +139,14 @@ sudo tar -C /usr/local -xzf go1.17.2.linux-arm64.tar.gz
 go --version
 
 export PATH=$PATH:/usr/local/go/bin
+```
+
+#### MacOS
+
+Golang can be install with Brew:
+
+```
+brew install go
 ```
 
 #### Python 3.x
@@ -204,24 +220,41 @@ Within the fabric-baseimage codebase there are files that should be adjusted for
 
 #### 4.1.2 Fabric baseimage
 
-Edit the file **config/baseimage/Dockerfile** by commenting out
+Edit the file **config/baseimage/Dockerfile** with your favourite text editor:
+
+```
+nano ./config/baseimage/Dockerfile
+```
+
+Comment out the following line:
 
 ```
 FROM adoptopenjdk:8u222-b10-jdk-openj9-0.15.1
 ```
-and inserting this line:
+
+and replace it with the following line:
+
 ```
 FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u302-b08
 ```
 
 #### 4.1.3 Fabric baseos
 
-Edit the file **config/baseos/Dockerfile** by commenting out
+Edit the file **config/baseos/Dockerfile**:
+
+
+```
+nano ./config/baseos/Dockerfile 
+```
+
+Comment out the following line:
+
 ```
 FROM debian:buster-20190910-slim
 ```
 
-and inserting this line:
+and replace it with the following line:
+
 ```
 FROM arm64v8/debian:buster
 ```
@@ -230,24 +263,44 @@ FROM arm64v8/debian:buster
 
 Please note that this image is no longer used by Hyperledger Fabric 2.x and instead, a Apache-maintained Couchdb Docker image is used instead. The documentation on how to prepare a Dockerfile for ARM64 of Fabric-maintained Couchdb Docker image is here for posterity only.
 
-Edit the file **images/couchdb/Dockerfile** by commenting out
+Edit the file **images/couchdb/Dockerfile**:
+
+```
+nano ./images/couchdb/Dockerfile
+```
+
+First, comment out the following line:
 
 ```
 FROM debian:stretch-20190910-slim
 ```
-and inserting this line;
+
+and replace it with the following line:
+
 ```
 FROM arm64v8/debian:buster
 ```
-Whilst in the same file replace the following line:
+
+Then, comment out the following line:
+
 ```
 libicu57 \
 ```
-with the following line
+
+and replace it with the following line:
+
 ```
 libicu63 \
 ```
+
 Finally in the same file comment out the following lines:
+
+```
+libmozjs185-1.0
+```
+
+and replace it with the following line:
+
 ```
 libmozjs185 \
 libnspr4-dev \
@@ -257,26 +310,53 @@ libnspr4-dev \
 
 Please note that Kafka and Zookeeper Ordering Service Network is set to deprecated status in Hyperledger Fabric 2.x and instead, Raft OSN is used instead. The documentation on how to prepare a Dockerfile for ARM64 of Kafka/Zookeeper Docker images is here for posterity only.
 
-Edit the two docker files in **images/zookeeper/Dockerfile** and **images/kafka/Dockerfile** by commenting out
+Edit the two docker files in **images/zookeeper/Dockerfile** and **images/kafka/Dockerfile**:
+
+for Zookeeper:
+
+```
+nano ./images/zookeeper/Dockerfile
+```
+
+for Kafka:
+
+```
+nano ./images/kafka/Dockerfile
+```
+
+First, comment out the following line:
+
 ```
 FROM debian:buster-20190910-slim as download
 ```
+
 and insert this line:
+
 ```
 FROM arm64v8/debian:buster as download
 ```
-still in the same file comment this line
+
+still in the same file comment this line:
+
 ```
 FROM adoptopenjdk:8u222-b10-jdk-openj9-0.15.1
 ```
+
 and insert this line:
+
 ```
 FROM adoptopenjdk/openjdk8:aarch64-ubuntu-jdk8u302-b08
 ```
 
 #### 4.1.6 Makefile scripts
 
-Lastly edit the file **scripts/common/setup.sh** and replace two instances of the following line:
+Lastly edit the file **scripts/common/setup.sh**:
+
+```
+nano ./images/zookeeper/Dockerfile
+```
+
+replace two instances of the following line:
 ```
 ARCH=`uname -m | sed 's|i686|386|' | sed 's|x86_64|amd64|'`
 ```
