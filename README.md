@@ -7,7 +7,7 @@ This guide will take you through the process of deploying Hyperledger Fabric on 
 - *Section 1. Document Overview*
 - *Section 2. Installation of prerequisites on your development device*
 - *Section 3. Preparation of development environment and downloading the necessary git repositories*
-- *Section 4. Preparation of Docker images and binaries
+- *Section 4. Preparation of Docker images and binaries*
 - *Section 5. Deployment of a sample Hyperledger Fabric network using `fabric-samples` repository from Hyperledger.*
 
 This guide assumes that you are already familiar with Hyperledger Fabric and you have successfully deployed it in the past, including sample networks available in `fabric-samples` repository from Hyperledger. If this is not the case then it is recommended that you visit Hyperledger Fabric documentation website and try it out on x86 environment before proceeding with an installation on ARM64-based machine.
