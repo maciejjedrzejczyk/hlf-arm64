@@ -489,6 +489,10 @@ nano images/peer/Dockerfile
 Now, include the following text:
 
 ```
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 ARG GO_VER
 ARG ALPINE_VER
 
@@ -553,6 +557,10 @@ nano images/tools/Dockerfile
 Now, include the following text:
 
 ```
+# Copyright IBM Corp. All Rights Reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 ARG GO_VER
 #ARG ALPINE_VER
 #FROM golang:${GO_VER}-alpine${ALPINE_VER} as golang
@@ -623,54 +631,85 @@ hyperledger/fabric-ccenv       2.3                              abb88bd95e67   5
 hyperledger/fabric-ccenv       2.3.3                            abb88bd95e67   5 minutes ago    496MB
 hyperledger/fabric-ccenv       arm64-2.3.3-snapshot-99553020d   abb88bd95e67   5 minutes ago    496MB
 hyperledger/fabric-ccenv       latest                           abb88bd95e67   5 minutes ago    496MB
-hyperledger/fabric-baseos      2.3                              49e4c027a401   5 minutes ago    6.65MB
-hyperledger/fabric-baseos      2.3.3                            49e4c027a401   5 minutes ago    6.65MB
-hyperledger/fabric-baseos      arm64-2.3.3-snapshot-99553020d   49e4c027a401   5 minutes ago    6.65MB
-hyperledger/fabric-baseos      latest                           49e4c027a401   5 minutes ago    6.65MB
-hyperledger/fabric-zookeeper   arm64-0.4.22                     d2da71e0aac2   14 minutes ago   374MB
-hyperledger/fabric-zookeeper   latest                           d2da71e0aac2   14 minutes ago   374MB
-hyperledger/fabric-kafka       arm64-0.4.22                     6d3216ecbd04   15 minutes ago   368MB
-hyperledger/fabric-kafka       latest                           6d3216ecbd04   15 minutes ago   368MB
-hyperledger/fabric-couchdb     arm64-0.4.22                     8c91b8547d19   15 minutes ago   469MB
-hyperledger/fabric-couchdb     latest                           8c91b8547d19   15 minutes ago   469MB
-hyperledger/fabric-baseimage   arm64-0.4.22                     c75c8c828175   45 minutes ago   1.11GB
-hyperledger/fabric-baseimage   latest                           c75c8c828175   45 minutes ago   1.11GB
-hyperledger/fabric-baseos      arm64-0.4.22                     ffc7104b983f   58 minutes ago   120MB
 ```
 
-3. Dependent on what the Raspberry Pi will be in your deployment create the fabric-ca by navigating to **fabric-ca** directory. In this directory switch to branch v1.4.7
-```
-git checkout v1.4.7
-```
-
-Open the Makefile in fabric-ca and replace every instance of amd64 to arm64 for Linux entries.
+#### 4.2.7 Building binaries
 
 Within this directory Now execute this command:
+
+```
+ make configtxgen configtxlator cryptogen discover idemixgen orderer osnadmin peer
+```
+
+All binaries will be placed in /build/bin folder
+
+```
+ls -l build/bin
+total 285656
+-rwxr-xr-x  1 mj  staff  16271506 Oct 19 22:23 configtxgen
+-rwxr-xr-x  1 mj  staff  14964258 Oct 19 22:23 configtxlator
+-rwxr-xr-x  1 mj  staff   9760082 Oct 19 22:23 cryptogen
+-rwxr-xr-x  1 mj  staff  15203122 Oct 19 22:23 discover
+-rwxr-xr-x  1 mj  staff   8555874 Oct 19 22:23 idemixgen
+-rwxr-xr-x  1 mj  staff  27907570 Oct 19 22:23 orderer
+-rwxr-xr-x  1 mj  staff  14267266 Oct 19 22:23 osnadmin
+-rwxr-xr-x  1 mj  staff  39312018 Oct 19 22:23 peer
+```
+
+### 4.3 fabric-ca
+
+The Fabric fabric-ca repository contains source code for the docker images required for `fabric-ca` and `fabric-ca-client` as well as `fabric-ca-server` binaries. Navigate to the **fabric**:
+
+```
+cd $HOME/go/src/github.com/hyperledger/fabric-ca
+```
+
+#### 4.3.1  Setting a target branch
+
+Navigate to **fabric-ca directory** and here execute this command to switch to branch v1.5.2:
+
+```
+git checkout v1.5.2
+```
+
+#### 4.3.2  Build fabric-ca Docker image:
+
+Within this directory execute this command:
+
 ```
 make docker
 ```
 
-## BUILDING BASEIMAGE DOCKER IMAGES ##
+If successful this process will create `fabric-ca` docker image. At this point run **docker images** to see created images. If successful a list of created docker images will be updated as follows:
 
-Binary executables which include peer, orderer, cryptogen and more need to be built for the ARM64 architecture as well. These can be built from the source code in /fabric folder.
 ```
-$ make native
-```
+REPOSITORY                     TAG                              IMAGE ID       CREATED             SIZE
+hyperledger/fabric-ca          1.5.2                            f2bcb91d2df6   5 minutes ago       69.9MB
+hyperledger/fabric-ca          arm64-1.5.2                      f2bcb91d2df6   5 minutes ago       69.9MB
+hyperledger/fabric-ca          latest                           f2bcb91d2df6   5 minutes ago       69.9MB
 
-These built executables will be places in the bin folder within /bin and must be moved to the /bin folder for the Hyperledger fabric samples or project.
-
-### **ALL REQUIRED DOCKER IMAGES WOULD HAVE BEEN BUILT BY NOW.**
-These built images can be accessed from https://hub.docker.com/u/chinyati.
-Run docker images to view them.
-
-ERRORS
-For errors that could come up when deploying test-network or your channels look for core.yaml file in config and edit Memory value to:
-```
-Memory: 16777216
 ```
 
-Install gcc to avoid runtime errors
+#### 4.3.3  Build fabric-ca binaries:
+
+Within this directory execute this command:
+
 ```
-sudo apt install -y gcc
+make fabric-ca-client
 ```
 
+and then
+
+```
+make fabric-ca-server
+```
+
+If successful this process will create `bin` folder with binaries within:
+
+```
+ls -l bin 
+total 108752
+-rwxr-xr-x  1 mj  staff  26190194 Oct 19 22:36 fabric-ca-client
+-rwxr-xr-x  1 mj  staff  29484786 Oct 19 22:36 fabric-ca-server
+
+```
