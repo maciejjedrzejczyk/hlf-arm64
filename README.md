@@ -7,9 +7,10 @@ This guide will take you through the process of deploying Hyperledger Fabric on 
 - *Section 1. Document Overview*
 - *Section 2. Installation of prerequisites on your development device*
 - *Section 3. Preparation of development environment and downloading the necessary git repositories*
-- *Section 4. Preparation of Docker images*
-- *Section 5. Compilation of Hyperledger Fabric binaries*
-- *Section 6. Deployment of a sample Hyperledger Fabric network using `fabric-samples` repository from Hyperledger.*
+- *Section 4. Preparation of Docker images and binaries
+- *Section 5. Deployment of a sample Hyperledger Fabric network using `fabric-samples` repository from Hyperledger.*
+
+This guide assumes that you are already familiar with Hyperledger Fabric and you have successfully deployed it in the past, including sample networks available in `fabric-samples` repository from Hyperledger. If this is not the case then it is recommended that you visit Hyperledger Fabric documentation website and try it out on x86 environment before proceeding with an installation on ARM64-based machine.
 
 ### 1.1 Verified deployments
 
@@ -713,3 +714,77 @@ total 108752
 -rwxr-xr-x  1 mj  staff  29484786 Oct 19 22:36 fabric-ca-server
 
 ```
+
+
+### 4.4 fabric-nodeenv
+
+The fabric-nodeenv repository contains source code for the docker image required to run javascript chaincodes. Navigate to the **fabric-chaincode-node**:
+
+```
+cd $HOME/go/src/github.com/hyperledger/fabric-chaincode-node/docker/fabric-nodeenv
+```
+
+#### 4.4.1 Setting a target branch
+
+Execute this command to switch to branch v2.3.0:
+
+```
+git checkout v2.3.0
+```
+
+#### 4.4.1  Build fabric-nodeenv Docker image:
+
+Go to the Dockerfile folder:
+
+```
+cd $HOME/go/src/github.com/hyperledger/fabric-chaincode-node/docker/fabric-nodeenv
+```
+
+Within this directory execute this command:
+
+```
+docker build . -t hyperledger/fabric-nodeenv:latest
+```
+
+After a successful docker image build, add additional two tags to an existing image:
+
+```
+docker tag hyperledger/fabric-nodeenv:latest hyperledger/fabric-nodeenv:2.3
+docker tag hyperledger/fabric-nodeenv:latest hyperledger/fabric-nodeenv:2.3.3
+```
+
+If successful this process will create `fabric-nodeenv` docker image. At this point run **docker images** to see created images. If successful a list of created docker images will be updated as follows:
+
+```
+REPOSITORY                     TAG                              IMAGE ID       CREATED             SIZE
+hyperledger/fabric-nodeenv     2.3                              64a2da369b9a   About a minute ago   285MB
+hyperledger/fabric-nodeenv     2.3.3                            64a2da369b9a   About a minute ago   285MB
+hyperledger/fabric-nodeenv     latest                           64a2da369b9a   About a minute ago   285MB
+
+```
+
+
+## 5. DEPLOYMENT OF A SAMPLE NETWORK
+
+### 5.1 downloading fabric-samples
+
+wget https://github.com/hyperledger/fabric/releases/download/v2.3.3/hyperledger-fabric-linux-amd64-2.3.3.tar.gz
+
+tar -xvf hyperledger-fabric-linux-amd64-2.3.3.tar.gz
+
+git clone https://github.com/hyperledger/fabric-samples
+
+cd $HOME/fabric-samples
+
+git checkout v2.3.0
+
+cp -r $HOME/config ./ 
+
+mkdir -p $HOME/fabric-samples/bin
+
+cp -r $HOME/go/src/github.com/hyperledger/fabric/build/bin  $HOME/fabric-samples
+
+cp -r $HOME/go/src/github.com/hyperledger/fabric-ca/bin  $HOME/fabric-samples
+
+
+
