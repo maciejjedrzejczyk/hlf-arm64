@@ -36,7 +36,7 @@ In order to proceed with the deployment of Hyperledger Fabric on ARM64 device an
 
 ### 2.1 Docker engine
 
-#### Debian-based OS
+* a) Debian-based OS *
 
 The installation of this component is fairly similar to its counterpart on x86 architecture:
 
@@ -59,7 +59,7 @@ sudo usermod -aG docker $USER
 logout
 ```
 
-#### Amazon Linux 2 (Graviton 2)
+* b) Amazon Linux 2 (Graviton 2)*
 
 Docker engine can be installed with the following command:
 
@@ -67,7 +67,7 @@ Docker engine can be installed with the following command:
 sudo amazon-linux-extras install docker
 ```
 
-#### MacOS
+* c) MacOS*
 
 Docker for Mac using M1 processor can be downloaded from an official Docker website: https://docs.docker.com/desktop/mac/install/
 
@@ -79,7 +79,7 @@ There is currently no official docker-compose binary dedicated to ARM64 and comp
 
 *a) Install software packages*
 
-#### Debian-based OS
+*Debian-based OS*
 
 ```
 sudo apt install python3-dev
@@ -89,7 +89,7 @@ sudo apt-get install build-essential -y
 sudo apt-get install python3-dev -y
 ```
 
-#### Centos/RHEL-based OS
+*Centos/RHEL-based OS*
 
 ```
 sudo yum groupinstall "Development Tools"
@@ -124,12 +124,11 @@ SODIUM_INSTALL=system pip3 install docker-compose
 docker-compose -v
 ```
 
-
 #### Golang
 
 The installation of this component is fairly similar to its counterpart on x86 architecture. The newest release of Golang can be used.
 
-#### Debian and Centos/RHEL-based based OS
+*a) Debian and Centos/RHEL-based based OS*
 
 ```
 wget https://golang.org/dl/go1.17.2.linux-arm64.tar.gz
@@ -141,7 +140,7 @@ go --version
 export PATH=$PATH:/usr/local/go/bin
 ```
 
-#### MacOS
+*b) MacOS*
 
 Golang can be install with Brew:
 
@@ -272,7 +271,7 @@ nano ./images/couchdb/Dockerfile
 First, comment out the following line:
 
 ```
-FROM debian:stretch-20190910-slim
+FROM debian:buster-20190910-slim
 ```
 
 and replace it with the following line:
@@ -281,7 +280,25 @@ and replace it with the following line:
 FROM arm64v8/debian:buster
 ```
 
-Then, comment out the following line:
+Then, put the following set of installation commands betwen `RUN groupadd` and `RUN apt-get update`:
+
+
+```
+RUN apt-get update -y && apt-get install -y --no-install-recommends \
+    wget \
+    libnspr4-dev
+
+RUN wget http://ftp.br.debian.org/debian/pool/main/libf/libffi/libffi6_3.2.1-6_arm64.deb
+RUN wget http://ftp.ro.debian.org/debian/pool/main/m/mozjs/libmozjs185-1.0_1.8.5-1.0.0+dfsg-6_arm64.deb
+RUN wget http://ftp.br.debian.org/debian/pool/main/m/mozjs/libmozjs185-dev_1.8.5-1.0.0+dfsg-6_arm64.deb
+RUN wget http://ftp.pl.debian.org/debian/pool/main/libf/libffi/libffi-dev_3.2.1-6_arm64.deb
+
+RUN dpkg -i libffi6_3.2.1-6_arm64.deb
+RUN dpkg -i libffi-dev_3.2.1-6_arm64.deb
+RUN dpkg -i libmozjs185-1.0_1.8.5-1.0.0+dfsg-6_arm64.deb
+```
+
+Comment out the following line:
 
 ```
 libicu57 \
@@ -296,14 +313,22 @@ libicu63 \
 Finally in the same file comment out the following lines:
 
 ```
-libmozjs185-1.0
-```
-
-and replace it with the following line:
-
-```
 libmozjs185 \
 libnspr4-dev \
+```
+
+
+Then, put the following set of installation commands betwen `&& rm -rf /var/lib/apt/lists/*` and `ENV GOSU_VERSION 1.10`:
+
+
+```
+RUN dpkg -i libmozjs185-dev_1.8.5-1.0.0+dfsg-6_arm64.deb
+```
+
+Later within this file, comment out the following line:
+
+```
+libmozjs185-dev \
 ```
 
 #### 4.1.5 Kafka and Zookeeper
@@ -390,20 +415,25 @@ After setting up the Prerequisites and also editing the files in the Base-image 
 1. The following instructions should be done whilst in **fabric-baseimage directory**
 
 * To build docker images for the baseimage and baseos execute:
+
 ```
 make docker
 ```
+
 After an hour+ build should complete and then run **docker images** to list the successfully built images. If successful proceed.
 
 * To build docker image for couchdb execute:
 ```
 make couchdb
 ```
+
 * To build docker image for kafka execute:
 ```
 make kafka
 ```
+
 * To build docker image for zookeeper execute:
+
 ```
 make zookeeper
 ```
@@ -411,23 +441,18 @@ make zookeeper
 At this point run **docker images** to see created images. If successful a list of created docker images will show.
 
 ```
-hyperledger/fabric-ccenv       2.3                              77e17bf437cc   27 hours ago    496MB
-hyperledger/fabric-ccenv       2.3.3                            77e17bf437cc   27 hours ago    496MB
-hyperledger/fabric-ccenv       arm64-2.3.3-snapshot-99553020d   77e17bf437cc   27 hours ago    496MB
-hyperledger/fabric-ccenv       latest                           77e17bf437cc   27 hours ago    496MB
-hyperledger/fabric-baseos      2.3                              68a177f35497   27 hours ago    6.65MB
-hyperledger/fabric-baseos      2.3.3                            68a177f35497   27 hours ago    6.65MB
-hyperledger/fabric-baseos      arm64-2.3.3-snapshot-99553020d   68a177f35497   27 hours ago    6.65MB
-hyperledger/fabric-baseos      latest                           68a177f35497   27 hours ago    6.65MB
-hyperledger/fabric-zookeeper   arm64-0.4.22                     e7844f555748   27 hours ago    374MB
-hyperledger/fabric-zookeeper   latest                           e7844f555748   27 hours ago    374MB
-hyperledger/fabric-kafka       arm64-0.4.22                     3950ddc2f3ba   27 hours ago    368MB
-hyperledger/fabric-kafka       latest                           3950ddc2f3ba   27 hours ago    368MB
-hyperledger/fabric-couchdb     arm64-0.4.22                     be18d2ecbcf8   27 hours ago    469MB
-hyperledger/fabric-couchdb     latest                           be18d2ecbcf8   27 hours ago    469MB
-hyperledger/fabric-baseimage   arm64-0.4.22                     b503d2f95c90   27 hours ago    1.11GB
-hyperledger/fabric-baseimage   latest                           b503d2f95c90   27 hours ago    1.11GB
-hyperledger/fabric-baseos      arm64-0.4.22                     f0490e5a0b85   28 hours ago    120MB
+REPOSITORY                     TAG            IMAGE ID       CREATED          SIZE
+hyperledger/fabric-zookeeper   arm64-0.4.22   d2da71e0aac2   4 minutes ago    374MB
+hyperledger/fabric-zookeeper   latest         d2da71e0aac2   4 minutes ago    374MB
+hyperledger/fabric-kafka       arm64-0.4.22   6d3216ecbd04   4 minutes ago    368MB
+hyperledger/fabric-kafka       latest         6d3216ecbd04   4 minutes ago    368MB
+hyperledger/fabric-couchdb     arm64-0.4.22   8c91b8547d19   5 minutes ago    469MB
+hyperledger/fabric-couchdb     latest         8c91b8547d19   5 minutes ago    469MB
+hyperledger/fabric-baseimage   arm64-0.4.22   c75c8c828175   35 minutes ago   1.11GB
+hyperledger/fabric-baseimage   latest         c75c8c828175   35 minutes ago   1.11GB
+hyperledger/fabric-baseos      arm64-0.4.22   ffc7104b983f   48 minutes ago   120MB
+hyperledger/fabric-baseos      latest         ffc7104b983f   48 minutes ago   120MB
+
 ```
 
 ### 4.2 peer, orderer, tools, ccenv, fabric binaries
@@ -447,11 +472,21 @@ git checkout v2.3.3
 
 #### 4.2.2 peer
 
+The original `golang-alpine` docker image used by the `peer` component fails to build with `peer` binary inside due to lack of necessary libraries. Instead, it is necessary to leverage `golang-buster` image for ARM64. The output will result with a slightly bigger but properly functioning `peer` docker container.
+
 Move the original Dockerfile to make a room for a new file:
 
-mv Dockerfile Dockerfile.orig
+```
+mv images/peer/Dockerfile images/peer/Dockerfile.old
+```
 
-Now, create a new Dockerfile and include the following text:
+Create a new Dockerfile:
+
+```
+nano images/peer/Dockerfile
+```
+
+Now, include the following text:
 
 ```
 ARG GO_VER
@@ -500,11 +535,22 @@ There is no need for modification of an original Dockerfile. You can now go to a
 
 #### 4.2.5 tools
 
+Similarly to peer container, the original `golang-alpine` docker image used by `fabric-tools` image fails to build with `peer` binary inside due to lack of necessary libraries for ARM64. Instead, it is necessary to leverage `golang-buster` image. The output will result with a slightly bigger but properly functioning `peer` docker container.
+
 Move the original Dockerfile to make a room for a new file:
 
-mv Dockerfile Dockerfile.orig
+```
+mv images/tools/Dockerfile images/tools/Dockerfile.old
+```
 
-Now, create a new Dockerfile and include the following text:
+Create a new Dockerfile:
+
+```
+nano images/tools/Dockerfile
+```
+
+
+Now, include the following text:
 
 ```
 ARG GO_VER
@@ -545,18 +591,52 @@ COPY --from=tools /go/src/github.com/hyperledger/fabric/sampleconfig ${FABRIC_CF
 
 ```
 
-Save the file and exit the folder.
+Save the file.
 
-
-Within the fabric-baseimage codebase there are files that should be adjusted for successful build.
+#### 4.2.6 Building peer, orderer, tools and ccenv Docker images and binaries
 
 Within this directory Now execute this command:
+
 ```
 make docker
 ```
 
 If successful this process will create the **peer, orderer, tools, ccenv**. These individual components can also be built separately e.g ```make peer peer-docker``` or ```make ccenv```.
-Run docker images to list all created image.
+
+At this point run **docker images** to see created images. If successful a list of created docker images will be updated as follows:
+
+```
+REPOSITORY                     TAG                              IMAGE ID       CREATED          SIZE
+hyperledger/fabric-tools       2.3                              8a606f23287c   2 minutes ago    872MB
+hyperledger/fabric-tools       2.3.3                            8a606f23287c   2 minutes ago    872MB
+hyperledger/fabric-tools       arm64-2.3.3-snapshot-99553020d   8a606f23287c   2 minutes ago    872MB
+hyperledger/fabric-tools       latest                           8a606f23287c   2 minutes ago    872MB
+hyperledger/fabric-peer        2.3                              99837ca3072b   3 minutes ago    775MB
+hyperledger/fabric-peer        2.3.3                            99837ca3072b   3 minutes ago    775MB
+hyperledger/fabric-peer        arm64-2.3.3-snapshot-99553020d   99837ca3072b   3 minutes ago    775MB
+hyperledger/fabric-peer        latest                           99837ca3072b   3 minutes ago    775MB
+hyperledger/fabric-orderer     2.3                              cc10d618ae77   4 minutes ago    33.3MB
+hyperledger/fabric-orderer     2.3.3                            cc10d618ae77   4 minutes ago    33.3MB
+hyperledger/fabric-orderer     arm64-2.3.3-snapshot-99553020d   cc10d618ae77   4 minutes ago    33.3MB
+hyperledger/fabric-orderer     latest                           cc10d618ae77   4 minutes ago    33.3MB
+hyperledger/fabric-ccenv       2.3                              abb88bd95e67   5 minutes ago    496MB
+hyperledger/fabric-ccenv       2.3.3                            abb88bd95e67   5 minutes ago    496MB
+hyperledger/fabric-ccenv       arm64-2.3.3-snapshot-99553020d   abb88bd95e67   5 minutes ago    496MB
+hyperledger/fabric-ccenv       latest                           abb88bd95e67   5 minutes ago    496MB
+hyperledger/fabric-baseos      2.3                              49e4c027a401   5 minutes ago    6.65MB
+hyperledger/fabric-baseos      2.3.3                            49e4c027a401   5 minutes ago    6.65MB
+hyperledger/fabric-baseos      arm64-2.3.3-snapshot-99553020d   49e4c027a401   5 minutes ago    6.65MB
+hyperledger/fabric-baseos      latest                           49e4c027a401   5 minutes ago    6.65MB
+hyperledger/fabric-zookeeper   arm64-0.4.22                     d2da71e0aac2   14 minutes ago   374MB
+hyperledger/fabric-zookeeper   latest                           d2da71e0aac2   14 minutes ago   374MB
+hyperledger/fabric-kafka       arm64-0.4.22                     6d3216ecbd04   15 minutes ago   368MB
+hyperledger/fabric-kafka       latest                           6d3216ecbd04   15 minutes ago   368MB
+hyperledger/fabric-couchdb     arm64-0.4.22                     8c91b8547d19   15 minutes ago   469MB
+hyperledger/fabric-couchdb     latest                           8c91b8547d19   15 minutes ago   469MB
+hyperledger/fabric-baseimage   arm64-0.4.22                     c75c8c828175   45 minutes ago   1.11GB
+hyperledger/fabric-baseimage   latest                           c75c8c828175   45 minutes ago   1.11GB
+hyperledger/fabric-baseos      arm64-0.4.22                     ffc7104b983f   58 minutes ago   120MB
+```
 
 3. Dependent on what the Raspberry Pi will be in your deployment create the fabric-ca by navigating to **fabric-ca** directory. In this directory switch to branch v1.4.7
 ```
