@@ -768,23 +768,45 @@ hyperledger/fabric-nodeenv     latest                           64a2da369b9a   A
 
 ### 5.1 downloading fabric-samples
 
+Download the current version of fabric binaries file. Although binaries themselves won't be used (we already have binaries specific to ARM64 architecture), there are configuration files which are needed by sample networks to run. For the purpose of this guide, we will download this file in `$HOME` folder:
+
+```
 wget https://github.com/hyperledger/fabric/releases/download/v2.3.3/hyperledger-fabric-linux-amd64-2.3.3.tar.gz
+```
 
+Decompress the compressed file:
+
+```
 tar -xvf hyperledger-fabric-linux-amd64-2.3.3.tar.gz
+```
 
+Then, download `fabric-samples` repository from Hyperledger Fabric github website:
+
+```
 git clone https://github.com/hyperledger/fabric-samples
+```
 
-cd $HOME/fabric-samples
+Copy configuration files extracted from the compressed file downloaded earlier and binaries compiled earlier:
 
-git checkout v2.3.0
+```
+cp -r $HOME/config $HOME/fabric-samples
+```
 
-cp -r $HOME/config ./ 
+Create a dedicated bin folder for binaries:
 
+```
 mkdir -p $HOME/fabric-samples/bin
+```
 
+Copy binaries from ```fabric``` and ```fabric-ca``` folders:
+
+```
 cp -r $HOME/go/src/github.com/hyperledger/fabric/build/bin  $HOME/fabric-samples
-
 cp -r $HOME/go/src/github.com/hyperledger/fabric-ca/bin  $HOME/fabric-samples
+```
 
+### 5.2 Run a sample network
+
+To run a sample network, simply follow an official tutorial available on Hyperledger Fabric documentation: https://hyperledger-fabric.readthedocs.io/en/release-2.2/test_network.html
 
 
