@@ -42,7 +42,7 @@ In order to proceed with the deployment of Hyperledger Fabric on ARM64 device an
 
 ### 2.1 Docker engine
 
-* a) Debian-based OS *
+a) Debian-based OS
 
 The installation of this component is fairly similar to its counterpart on x86 architecture:
 
@@ -65,7 +65,7 @@ sudo usermod -aG docker $USER
 logout
 ```
 
-* b) Amazon Linux 2 (Graviton 2)*
+b) Amazon Linux 2 (Graviton 2)
 
 Docker engine can be installed with the following command:
 
@@ -73,7 +73,7 @@ Docker engine can be installed with the following command:
 sudo amazon-linux-extras install docker
 ```
 
-* c) MacOS*
+c) MacOS
 
 Docker for Mac using M1 processor can be downloaded from an official Docker website: https://docs.docker.com/desktop/mac/install/
 
@@ -85,7 +85,7 @@ There is currently no official docker-compose binary dedicated to ARM64 and comp
 
 *a) Install software packages*
 
-*Debian-based OS*
+Debian-based OS
 
 ```
 sudo apt install python3-dev
@@ -95,7 +95,7 @@ sudo apt-get install build-essential -y
 sudo apt-get install python3-dev -y
 ```
 
-*Centos/RHEL-based OS*
+Centos/RHEL-based OS/Amazon Linux 2
 
 ```
 sudo yum groupinstall "Development Tools"
