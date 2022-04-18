@@ -2,7 +2,7 @@
 
 ## 1. DOCUMENT OVERVIEW
 
-This guide will take you through the process of deploying Hyperledger Fabric on devices using ARM64 architecture. The following areas will be covered in the tutorial below:
+This guide will take you through the process of deploying Hyperledger Fabric on devices using ARM64/armhf architecture. The following areas will be covered in the tutorial below:
 
 - *Section 1. Document Overview*
 - *Section 2. Installation of prerequisites on your development device*
